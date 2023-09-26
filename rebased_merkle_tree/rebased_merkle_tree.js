@@ -10,11 +10,11 @@
 // Note: Although this example script uses arweave-js, the rebasing logic is implemented at
 // the Arweave protocol level and can be used with any Arweave client library.
 //
-// See the README for more infocmation about Merkle Tree Rebasing:
+// See the README for more information about Merkle Tree Rebasing:
 // https://github.com/ArweaveTeam/examples/blob/main/rebased_merkle_tree/README.md
 //
 // This script starts by building 3 standard Arweave data transactions. It then merges two of
-// them using Merkle Tree Rebasing, and the merges the result with the third transaction.
+// them using Merkle Tree Rebasing, and thn merges the result with the third transaction.
 //
 // There are 3 main steps to the Merkle Tree Rebasing process:
 // 1. merge_and_rebase_merkle_trees(): Create a new data root for the merged tree
@@ -23,7 +23,6 @@
 //
 // After merging the 3 regular transactions this script posts the transaction and its chunks
 // to the configured Arweave node.
-//
 
 var fs = require("fs");
 var Arweave = require("arweave");
@@ -84,11 +83,11 @@ async function merge_and_rebase_merkle_trees(left_transaction, right_transaction
   });
 }
 
-// Preped a rebased merkle proof element to the existing proof from one of the subtrees.
+// Prepend a rebased merkle proof element to the existing proof from one of the subtrees.
 async function rebase_proof(
   merged_transaction, left_data_root, right_data_root, left_size, left_bound_shift, proof) {
     // REBASE_MARK is a 32-byte 0-value that indicates all merkle proof elements after it
-    // are rebased. The offset values in those merkle proof elements should be shifted by
+    // are rebased. The offset values in those merkle proof elements are to be shifted by
     // some amount. Elements in the left substree are not shifted, elements in the right subtree
     // are shifted by the rounded left-tree size (i.e. `round_to_chunk_size(left_size)`))
     // Note: this shifting is applied automatically by the Arweave node when it validates the proof.
@@ -116,7 +115,7 @@ async function rebase_chunk(merged_transaction, data_buffer_shift, chunk) {
   merged_transaction.chunks.chunks.push(chunk);
 }
 
-// Comact the data arrays from the left and right transactions, and rebase each chunk and proof
+// Compact the data arrays from the left and right transactions, and rebase each chunk and proof
 async function rebase_proofs(merged_transaction, left_transaction, right_transaction) {
   merged_transaction.data = Arweave.utils.concatBuffers([
     left_transaction.data, right_transaction.data]);
