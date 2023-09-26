@@ -6,6 +6,15 @@
 // 1. npm install --save arweave
 // 2. Update HOST, PORT, PROTOCOL, NETWORK, and wallet_path to match your environment
 // 3. ./rebased_merkle_tree.js
+// 4. After a successful run you should see the following output:
+//
+// POST <TXID>: 200
+// POST chunk 0: 200
+// POST chunk 1: 200
+// POST chunk 2: 200
+// POST chunk 3: 200
+// POST chunk 4: 200
+// <PROTOCOL>://<HOST>:<PORT>/tx/<TXID>
 //
 // Note: Although this example script uses arweave-js, the rebasing logic is implemented at
 // the Arweave protocol level and can be used with any Arweave client library.
@@ -14,7 +23,11 @@
 // https://github.com/ArweaveTeam/examples/blob/main/rebased_merkle_tree/README.md
 //
 // This script starts by building 3 standard Arweave data transactions. It then merges two of
-// them using Merkle Tree Rebasing, and thn merges the result with the third transaction.
+// them using Merkle Tree Rebasing, and then merges the result with the third transaction.
+//
+// The final tree roughly resembles the "Nesting rebased trees" example in the README (although the
+// chunk sizes differ slightly):
+// https://github.com/ArweaveTeam/examples/blob/main/rebased_merkle_tree/README.md#nesting-rebased-trees
 //
 // There are 3 main steps to the Merkle Tree Rebasing process:
 // 1. merge_and_rebase_merkle_trees(): Create a new data root for the merged tree
@@ -44,7 +57,7 @@ var arweave = new Arweave({
   network : NETWORK
 });
 
-var wallet_path = "/path/to/wallet/file.json";
+var wallet_path = "/path/to/wallet.json";
 var key = JSON.parse(fs.readFileSync(wallet_path));
 
 function round_to_chunk_size(size) {
@@ -83,14 +96,15 @@ async function merge_and_rebase_merkle_trees(left_transaction, right_transaction
   });
 }
 
-// Prepend a rebased merkle proof element to the existing proof from one of the subtrees.
+// Prepend a rebased merkle proof node to the existing proof from one of the subtrees.
 async function rebase_proof(
   merged_transaction, left_data_root, right_data_root, left_size, left_bound_shift, proof) {
-    // REBASE_MARK is a 32-byte 0-value that indicates all merkle proof elements after it
-    // are rebased. The offset values in those merkle proof elements are to be shifted by
-    // some amount. Elements in the left substree are not shifted, elements in the right subtree
+    // REBASE_MARK is a 32-byte 0-value that indicates all merkle proof nodes after it
+    // are rebased. The offset values in those merkle proof nodes are to be shifted by
+    // some amount. Nodes in the left substree are not shifted, nodes in the right subtree
     // are shifted by the rounded left-tree size (i.e. `round_to_chunk_size(left_size)`))
-    // Note: this shifting is applied automatically by the Arweave node when it validates the proof.
+    // Note: this shifting is applied automatically by the Arweave protocol when it validates
+    // the proof.
     let rebased_proof = Arweave.utils.concatBuffers([
       REBASE_MARK,
       left_data_root,
@@ -115,7 +129,7 @@ async function rebase_chunk(merged_transaction, data_buffer_shift, chunk) {
   merged_transaction.chunks.chunks.push(chunk);
 }
 
-// Compact the data arrays from the left and right transactions, and rebase each chunk and proof
+// Concatenate the data arrays from the left and right transactions, and rebase each chunk and proof
 async function rebase_proofs(merged_transaction, left_transaction, right_transaction) {
   merged_transaction.data = Arweave.utils.concatBuffers([
     left_transaction.data, right_transaction.data]);
@@ -125,18 +139,22 @@ async function rebase_proofs(merged_transaction, left_transaction, right_transac
   let left_size = parseInt(left_transaction.data_size);
 
   for (let i = 0; i < left_transaction.chunks.proofs.length; i++) {
+    // Left transactions's data is not shifted
     let data_buffer_shift = 0;
     await rebase_chunk(merged_transaction, data_buffer_shift, left_transaction.chunks.chunks[i]);
 
+    // Left tree is not shifted
     let left_bound_shift = 0;
     await rebase_proof(merged_transaction,
       left_data_root, right_data_root, left_size, left_bound_shift, 
       left_transaction.chunks.proofs[i]);
   }
   for (let i = 0; i < right_transaction.chunks.proofs.length; i++) {
+    // Right transactions's data is shifted by the compacted data size (excluding padding)
     let data_buffer_shift = left_transaction.data.byteLength;
     await rebase_chunk(merged_transaction, data_buffer_shift, right_transaction.chunks.chunks[i]);
 
+    // Right tree is shifted by the rounded left-tree size (including padding)
     let left_bound_shift = round_to_chunk_size(left_size);
     await rebase_proof(merged_transaction,
       left_data_root, right_data_root, left_size, left_bound_shift,
@@ -165,7 +183,7 @@ async function post_chunks(transaction) {
 }
 
 (async function(){
-  // Create 3 standard Arweave data transactions with standard merkle trees
+  // Create 3 standard Arweave data transactions with standard merkle trees and proofs
   let transaction1 = await arweave.createTransaction({
     data: fs.readFileSync('lorem_474000.txt')
   });
