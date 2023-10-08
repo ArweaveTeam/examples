@@ -54,7 +54,7 @@ The items in red need to be recomputed in order to build the new, merged tree. I
 
 ## Merging with rebasing
 
-Arweave 2.7 introduces a new Merkle Oroof attribute to indicate that a subtree root is **rebased**. A rebased subtree is treated like a full merkle tree for the purposes of calculating chunk offsets - i.e. the left-most chunk under that subtree is considered to be placed at index **0** within its data-offset space.
+Arweave 2.7 introduces a new Merkle Proof attribute to indicate that a subtree root is **rebased**. A rebased subtree is treated like a full merkle tree for the purposes of calculating chunk offsets - i.e. the left-most chunk under that subtree is considered to be placed at index **0** within its data-offset space.
 
 ![Merging With Rebasing](https://github.com/ArweaveTeam/examples/assets/3465100/1836d85f-50da-405c-8de6-2b6b3669241b)
 
