@@ -35,7 +35,7 @@ Once complete the Merkle Proof forms a complete path from the Data Chunk up thro
 ## 2 Merkle Trees
 
 In the following sections we will walk through how to merge these two Merkle Trees:
-![Regular Merkle Trees](https://github.com/ArweaveTeam/examples/assets/3465100/6a59c9b1-fb82-4e48-8fbf-6f67ffe2f662)
+![Rebased Merkle Trees](https://github.com/ArweaveTeam/examples/assets/3465100/2a6704d2-4a61-4774-a083-997beb3d9230)
 
 The tree rooted in **id1** has 1 chunk and its 0-based data-space runs from 0 to 262,144. The tree rooted in **id4** has 2 chunks and its 0-based data-space runs from 0 to 524,288.
 
